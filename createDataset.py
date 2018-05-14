@@ -4,11 +4,16 @@ import os
 import re
 from datetime import datetime
 
-personName = raw_input('Enter your full name: ')
-fbData = raw_input('Do you have Facebook data to parse through (y/n)?')
-googleData = raw_input('Do you have Google Hangouts data to parse through (y/n)?')
-linkedInData = raw_input('Do you have LinkedIn data to parse through (y/n)?')
-whatsAppData = raw_input('Do you have whatsAppData to parse through (y/n)?')
+# personName = raw_input('Enter your full name: ')
+personName = "Ayushya Chitransh"
+# fbData = raw_input('Do you have Facebook data to parse through (y/n)?')
+fbData = "n"
+# googleData = raw_input('Do you have Google Hangouts data to parse through (y/n)?')
+googleData  ="y"
+# linkedInData = raw_input('Do you have LinkedIn data to parse through (y/n)?')
+linkedInData = "y"
+# whatsAppData = raw_input('Do you have whatsAppData to parse through (y/n)?')
+whatsAppData = "n"
 
 def getWhatsAppData():
         df = pd.read_csv('whatsapp_chats.csv')
@@ -34,13 +39,13 @@ def getWhatsAppData():
                 myMessage = myMessage + str(row['Content']) + " "
         return responseDictionary
 
-def getGoogleHangoutsData():
+def getGoogleHangoutsData(location):
 	# Putting all the file names in a list
 	allFiles = []
 	# Edit these file and directory names if you have them saved somewhere else
-	for filename in os.listdir('GoogleTextForm'):
+	for filename in os.listdir(location):
 	    if filename.endswith(".txt"): 
-	        allFiles.append('GoogleTextForm/' + filename)
+	        allFiles.append(location + "/" + filename)
 
 	responseDictionary = dict() # The key is the other person's message, and the value is my response
 	# Going through each file, and recording everyone's messages to me, and my responses
@@ -117,9 +122,9 @@ def getFacebookData():
 	        myMessage, otherPersonsMessage, currentSpeaker = "","",""    
 	return responseDictionary
 
-def getLinkedInData():
-	df = pd.read_csv('Inbox.csv')
-	dateTimeConverter = lambda x: datetime.strptime(x,'%B %d, %Y, %I:%M %p')
+def getLinkedInData(file_name):
+	df = pd.read_csv(file_name)
+	dateTimeConverter = lambda x: datetime.strptime(x,'%x, %I:%M %p')
 	responseDictionary = dict()
 	peopleContacted = df['From'].unique().tolist()
 	for person in peopleContacted:
@@ -130,7 +135,7 @@ def getLinkedInData():
 	        continue
 	    combined = pd.concat([sentMessages, receivedMessages])
 	    combined['Date'] = combined['Date'].apply(dateTimeConverter)
-	    combined = combined.sort(['Date'])
+	    combined = combined.sort_values(['Date'])
 	    otherPersonsMessage, myMessage = "",""
 	    firstMessage = True
 	    for index, row in combined.iterrows():
@@ -153,7 +158,7 @@ def cleanMessage(message):
 	# Remove new lines within message
 	cleanedMessage = message.replace('\n',' ').lower()
 	# Deal with some weird tokens
-	cleanedMessage = cleanedMessage.replace("\xc2\xa0", "")
+	cleanedMessage = cleanedMessage.decode('utf8').encode('ascii', errors='ignore')
 	# Remove punctuation
 	cleanedMessage = re.sub('([.,!?])','', cleanedMessage)
 	# Remove multiple spaces in message
@@ -163,14 +168,15 @@ def cleanMessage(message):
 combinedDictionary = {}
 if (googleData == 'y'):
 	print 'Getting Google Hangout Data'
-	combinedDictionary.update(getGoogleHangoutsData())
+	combinedDictionary.update(getGoogleHangoutsData('dirtyData/hangouts/dataType1'))
+	combinedDictionary.update(getGoogleHangoutsData('dirtyData/hangouts/dataType2'))
 if (fbData == 'y'):
 	print 'Getting Facebook Data'
 	combinedDictionary.update(getFacebookData())
 if (linkedInData == 'y'):
 	print 'Getting LinkedIn Data'
-	combinedDictionary.update(getLinkedInData())
-if (whatsAppData == 'y')
+	combinedDictionary.update(getLinkedInData('dirtyData/linkedIn/Messages.csv'))
+if (whatsAppData == 'y'):
         print 'Getting whatsApp Data'
         combinedDictionary.update(getWhatsAppData())
 print 'Total len of dictionary', len(combinedDictionary)
